@@ -712,8 +712,6 @@ function deleteResult(){
 // othello.onUserInput([6,3]);
 
 
-(othello.states.title.enter)();
-
 (function(){
     console.log(localStorage);
     if(!localStorage.username){
@@ -728,4 +726,8 @@ function deleteResult(){
     }
 
 })();
+
+(othello.states.title.enter)();
+
+
 
