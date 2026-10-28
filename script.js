@@ -4,27 +4,22 @@
 const printMessage = {
     "normal": () => {
         const message = "";
-        document.getElementById("othello-result message").innerText = message;
-        document.getElementById("othello-result message").className = "";
+        document.getElementById("reversi-result message").innerText = message;
+        document.getElementById("reversi-result message").className = "";
 
     },
     "reput": () => {
         const message = "You can't put this area. please reput."
-        document.getElementById("othello-result message").innerText = message;
-        document.getElementById("othello-result message").className = "alert alert-warning mt-2";
+        document.getElementById("reversi-result message").innerText = message;
+        document.getElementById("reversi-result message").className = "alert alert-warning mt-2";
     },
     "gameset": (board) => {
         const message = "game set!"
-        document.getElementById("othello-result message").innerText = message;
-        document.getElementById("othello-result message").className = "alert alert-light mt-2";
+        document.getElementById("reversi-result message").innerText = message;
+        document.getElementById("reversi-result message").className = "alert alert-light mt-2";
 
-        const winMessageEl = document.getElementById("othello-result win");
-        let sum = 0;
-        for(const col of board){
-            for(const cell of col){
-                sum += cell;
-            }
-        }   
+        const winMessageEl = document.getElementById("reversi-result win");
+        const sum = boardCount(board);
         let winMessage = "";
         if(sum === 0) winMessage = "draw!";
         if(sum > 0) winMessage = "black win!";
@@ -33,18 +28,18 @@ const printMessage = {
     },
     "pass": () => {
         const message = "pass";
-        document.getElementById("othello-result message").innerText = message;
-        document.getElementById("othello-result message").className = "alert alert-primary mt-2";
+        document.getElementById("reversi-result message").innerText = message;
+        document.getElementById("reversi-result message").className = "alert alert-primary mt-2";
     },
     "waiting": () => {
         const message = "AI is thinking...";
-        document.getElementById("othello-result message").innerText = message;
-        document.getElementById("othello-result message").className = "alert alert-light mt-2";
+        document.getElementById("reversi-result message").innerText = message;
+        document.getElementById("reversi-result message").className = "alert alert-light mt-2";
     }
 }
 
 
-const othello = {
+const reversi = {
     state: "title",
     gameData: {
         board: null,
@@ -57,7 +52,7 @@ const othello = {
     states:{
         title:{
             enter: function(){
-                const othelloDisplay = document.getElementById("othello-display");
+                const reversiDisplay = document.getElementById("reversi-display");
 
                 const titleEl = document.createElement("h2");
                 titleEl.innerText = "Choose Mode!"
@@ -66,49 +61,46 @@ const othello = {
                 document.body.insertBefore(titleEl, document.body.children[1]);
                 
                 const buttonElement = document.createElement("button");
-                buttonElement.id = "othello-start";
-                buttonElement.innerText = "play";
+                buttonElement.id = "reversi-start";
+                buttonElement.innerText = "2-player mode";
                 buttonElement.type = "button";
                 buttonElement.className = "btn btn-primary ms-1 me-1"
                 buttonElement.addEventListener("click",(e) => {
-                    // console.log(e);
-                    othello.onUserInput(1);
+                    reversi.onUserInput(1);
                 });
-                othelloDisplay.appendChild(buttonElement);
+                reversiDisplay.appendChild(buttonElement);
 
                 const AI4bButtonElement = document.createElement("button");
-                AI4bButtonElement.id = "othelloAI4b-start";
+                AI4bButtonElement.id = "reversiAI4b-start";
                 AI4bButtonElement.innerText = "play with AI (You are black)";
                 AI4bButtonElement.type = "button";
                 AI4bButtonElement.className = "btn btn-secondary ms-1 me-1"
                 AI4bButtonElement.addEventListener("click", () => {
-                    othello.onUserInput(1,5,-1);
+                    reversi.onUserInput(1,5,-1);
                 });
-                othelloDisplay.appendChild(AI4bButtonElement);
+                reversiDisplay.appendChild(AI4bButtonElement);
                 
                 const AI4wButtonElement = document.createElement("button");
-                AI4wButtonElement.id = "othelloAI4w-start";
+                AI4wButtonElement.id = "reversiAI4w-start";
                 AI4wButtonElement.innerText = "play with AI (You are white)";
                 AI4wButtonElement.type = "button";
                 AI4wButtonElement.className = "btn btn-secondary ms-1 me-1"
                 AI4wButtonElement.addEventListener("click", () => {
-                    othello.onUserInput(1,5,1);
+                    reversi.onUserInput(1,5,1);
                 });
-                othelloDisplay.appendChild(AI4wButtonElement);
+                reversiDisplay.appendChild(AI4wButtonElement);
 
 
                 const recordEl = document.createElement("div");
-                recordEl.id = "othello-record";
+                recordEl.id = "reversi-record";
                 recordEl.className = "text-center mt-5";
 
-                // const iconEl = document.createElement("i");
-                // iconEl.className = "bi bi-bar-chart fs-3";
                 const textEl = document.createElement("h3");
-                textEl.innerText = `${localStorage.username}'s Battle Record with AI`;
+                const nameText = localStorage.username ? localStorage.username + "'s" : "Your";
+                textEl.innerText = `${nameText} Battle Record with AI`;
                 const recordTextEl = document.createElement("div");
                 recordTextEl.innerText = `wins👑:${localStorage.wins} loses😂:${localStorage.loses}`;
                 
-                // recordEl.appendChild(iconEl);
                 recordEl.appendChild(textEl);
                 recordEl.appendChild(recordTextEl);
 
@@ -117,60 +109,52 @@ const othello = {
             },
             execute: function(inputFirstTurn, AIstrength, AIturn){
                 document.getElementById("chooseModeText").remove();
-                document.getElementById("othello-record").remove();
-                othello.functions.printResult();
+                document.getElementById("reversi-record").remove();
+                document.getElementById("reversi-start").remove();
+                document.getElementById("reversiAI4b-start").remove();
+                document.getElementById("reversiAI4w-start").remove();
+
+                reversi.functions.printResult();
                 inputFirstTurn = 1;
-                othello.gameData.AIstrength = AIstrength || null;
-                othello.gameData.AIturn = AIturn || null;
-                // console.log(othello.gameData.board);
-                document.getElementById("othello-start").remove();
-                document.getElementById("othelloAI4b-start").remove();
-                document.getElementById("othelloAI4w-start").remove();
-                othello.gameData.board = othello.functions.createBoard();
-                othello.gameData.firstTurn = inputFirstTurn;
-                // othello.gameData.turn = inputFirstTurn;
-                othello.functions.updateBoard(othello.gameData.board, othello.gameData.firstTurn);
-                othello.functions.updateResult(othello.gameData.board, othello.gameData.turn);
+                reversi.gameData.AIstrength = AIstrength || null;
+                reversi.gameData.AIturn = AIturn || null;
+                reversi.gameData.board = reversi.functions.createBoard();
+                reversi.functions.printBoard();
+                reversi.gameData.firstTurn = inputFirstTurn;
+                reversi.functions.updateBoard(reversi.gameData.board, reversi.gameData.firstTurn);
+                reversi.functions.updateResult(reversi.gameData.board, reversi.gameData.turn);
                 return "play";
             },
         },
         play:{
             enter: function(){
-                othello.functions.printMessage.normal();
-                othello.gameData.turn = othello.gameData.turn !== null ? othello.functions.getTurn(othello.gameData.board, othello.gameData.turn) : othello.gameData.firstTurn;
-                othello.functions.updateBoard(othello.gameData.board, othello.gameData.turn);
-                othello.functions.updateResult(othello.gameData.board, othello.gameData.turn);
+                reversi.functions.printMessage.normal();
+                reversi.gameData.turn = reversi.gameData.turn !== null ? reversi.functions.getTurn(reversi.gameData.board, reversi.gameData.turn) : reversi.gameData.firstTurn;
+                reversi.functions.updateBoard(reversi.gameData.board, reversi.gameData.turn);
+                reversi.functions.updateResult(reversi.gameData.board, reversi.gameData.turn);
 
-                // while(othello.gameData.AIthinking){
-                //     console.log("waiting");
-                // }
 
-                if(othello.gameData.AIturn === othello.gameData.turn){
-                    
-                    othello.gameData.AIthinking = true;
-                    othello.functions.printMessage.waiting();
-                    // setTimeout(() => {
-                        const [x , y] = othello.functions.AI_NegaMax(othello.gameData.board, othello.gameData.AIturn, othello.gameData.AIstrength);
-                        othello.onUserInput(x, y);
-                        othello.functions.printMessage.normal();     
-                        othello.gameData.AIthinking = false;
-                    // }, 100);
+                if(reversi.gameData.AIturn === reversi.gameData.turn){
+                    reversi.gameData.AIthinking = true;
+                    reversi.functions.printMessage.waiting();
+                    setTimeout(() => {
+                        const [x , y] = reversi.functions.AI_NegaMax(reversi.gameData.board, reversi.gameData.AIturn, reversi.gameData.AIstrength);
+                        reversi.onUserInput(x, y);
+                        reversi.functions.printMessage.normal();     
+                        reversi.gameData.AIthinking = false;
+                    }, 300);
                     
                 }
             },
             execute: function(x, y){
-                // const x = xyarr[0];
-                // const y = xyarr[1];
-                // othello.functions.updateBoard(othello.gameData.board, othello.gameData.turn);
-                if(!othello.functions.canPutXY(othello.gameData.board, othello.gameData.turn, x, y)){
-                    // console.log(x, y);
-                    othello.functions.printMessage.reput();
+                if(!reversi.functions.canPutXY(reversi.gameData.board, reversi.gameData.turn, x, y)){
+                    reversi.functions.printMessage.reput();
                     return null;
                 }
-                othello.functions.distructivePut(othello.gameData.board, othello.gameData.turn, x, y);
-                if(!othello.functions.canPutSomething(othello.gameData.board)){
-                    const userTurn = -othello.gameData.AIturn;
-                    const w = boardCount(othello.gameData.board) * userTurn;
+                reversi.functions.distructivePut(reversi.gameData.board, reversi.gameData.turn, x, y);
+                if(!reversi.functions.canPutSomething(reversi.gameData.board)){
+                    const userTurn = -reversi.gameData.AIturn;
+                    const w = boardCount(reversi.gameData.board) * userTurn;
                     if(w > 0){
                         localStorage.wins++;
                     }else{
@@ -183,18 +167,15 @@ const othello = {
         },
         finish:{
             enter: function() {
-                othello.functions.updateBoard(othello.gameData.board, othello.gameData.turn);
-                othello.functions.updateResult(othello.gameData.board, othello.gameData.turn);
-                othello.functions.printMessage.gameset(othello.gameData.board);
+                reversi.functions.updateBoard(reversi.gameData.board, reversi.gameData.turn);
+                reversi.functions.updateResult(reversi.gameData.board, reversi.gameData.turn);
+                reversi.functions.printMessage.gameset(reversi.gameData.board);
             },
             execute: function(){
-                othello.functions.deleteResult();
-                othello.functions.dataInitialize();
-                othello.functions.boardDelete();
+                reversi.functions.deleteResult();
+                reversi.functions.dataInitialize();
+                reversi.functions.boardDelete();
                 
-                // const boardElement = document.getElementById("othello-board");
-                // console.log(boardElement);
-                // boardElement.remove();
                 return "title";
             },
         },
@@ -219,6 +200,7 @@ const othello = {
     },
     functions:{
         createBoard,
+        printBoard,
         canPutSomething,
         canPut,
         getTurn,
@@ -235,89 +217,60 @@ const othello = {
         dataInitialize,
         boardDelete,
         AI_NegaMax,
+        AI_last,
     },
 }
 
-// function othello_(){
-
-//     const board = createBoard();
-//     const firstTurn = 1;
-    
-//     updateBoard(board, firstTurn);
-
-//     const getTurn = getTurnMaker(firstTurn);
-//     while(canPutSomething(board)){
-
-//         const turn = getTurn(board);
-//         updateBoard(board, turn);
-//         printMessage.put(turn);
-//         let {x, y} = getPlace();
-//         while(!canPutXY(board, turn, x, y)){
-//             printMessage.reput(turn);
-//             updateBoard(board, turn);
-//         x = getPlaceX();
-//         y = getPlaceY();
-//         }
-//         distructivePut(board, turn, x, y)
-
-//     }
-//     printMessage.gameset(board);
-    
-// }
 
 function createBoard(){
     const board = Array.from({length:8}, () => Array.from({length:8}, () => 0));
-    board[3][3] = 1;
-    board[4][4] = 1;
-    board[3][4] = -1;
-    board[4][3] = -1;
+    board[3][3] = -1;
+    board[4][4] = -1;
+    board[3][4] = 1;
+    board[4][3] = 1;
 
+    
+    return board;
+}
+
+function printBoard(){
     const table = document.createElement("table");
-    table.className = "othello-board";
+    table.className = "reversi-board";
     const tbody = document.createElement("tbody");
     for(let i = 0; i < 8; i++){
         const tr = document.createElement("tr");
-        tr.className = "othello-row";
+        tr.className = "reversi-row";
         tr.id = i;
         for(let j = 0; j < 8; j++){
             const td = document.createElement("td");
-            td.className = "othello-cell ";
+            td.className = "reversi-cell ";
             td.id = j;
-            td.addEventListener("click", putClick);
+            td.addEventListener("click", () => reversi.onUserInput(i, j));
             tr.appendChild(td);
         }
         tbody.appendChild(tr);
     }
     table.appendChild(tbody);
-
-    const othelloMessageEl = document.createElement("div");
-    othelloMessageEl.id = "othello-result message";
-    // othelloMessageEl.className = "mt-2";
     
-    const othelloMainEl = document.createElement("div");
-    othelloMainEl.id = "othello-main";
+    const reversiMessageEl = document.createElement("div");
+    reversiMessageEl.id = "reversi-result message";
+    
+    const reversiMainEl = document.createElement("div");
+    reversiMainEl.id = "reversi-main";
+    
+    reversiMainEl.appendChild(table);
+    reversiMainEl.appendChild(reversiMessageEl);
+    document.getElementById("reversi-display").appendChild(reversiMainEl);
 
-    othelloMainEl.appendChild(table);
-    othelloMainEl.appendChild(othelloMessageEl);
-    document.getElementById("othello-display").appendChild(othelloMainEl);
-
-    return board;
+    // function getXY(event){
+    //     const row = event.target.id;
+    //     const col = event.target.parentElement.id;
+    //     const x = Number(col);
+    //     const y = Number(row)
+    //     reversi.onUserInput(x, y);
+    // }
 }
 
-function putClick(event){
-    if(othello.state === "title"){
-
-    }
-    if(othello.state === "play"){
-        // console.log(event.target);
-        const row = event.target.id;
-        const col = event.target.parentElement.id;
-        // console.log(col, row);
-        const x = Number(col);
-        const y = Number(row)
-        othello.onUserInput(x, y);
-    }
-}
 
 function canPutSomething(board){
     return canPut(board, 1) || canPut(board, -1);
@@ -334,19 +287,6 @@ function canPut(board, turn){
     return puttable;
 }
 
-// function getTurnMaker(firstTurn){
-//     let turn = -firstTurn;
-//     // return board => canPut(board, turn) ? -turn : turn;
-//     return board => {
-//         if(!canPutSomething(board)){return 0;}
-//         if(canPut(board,turn)){
-//             return -turn;
-//         }else{
-//             printMessage.pass();
-//             return turn;
-//         }
-//     }
-// }
 
 function getTurn(board, currentTurn) {
   if (!canPutSomething(board)) {
@@ -361,31 +301,16 @@ function getTurn(board, currentTurn) {
 }
 
 function updateBoard(board, turn){
-    //status update for dom
-    // stone amount
-    // stone status after putted
-
-    const turnElement = document.getElementById("othello-result turn");
-    // console.log(turnElement);
+    const turnElement = document.getElementById("reversi-result turn");
     turnElement.innerText = turn === 1 ? "black" : "white";
-
     
-    const colSize = board.length;
-    const rowSize = board[0].length;
-    const tableElement = document.getElementsByClassName("othello-board")[0];
-    // console.log(tableElement);
+    const tableElement = document.getElementsByClassName("reversi-board")[0];
     const boardElement = tableElement.children[0];
-    // console.log(boardElement);
     const puttableArray = puttablePlaceArray(board, turn);
-    // console.log(puttableArray);
-    // console.log(turn);
     for (const colElement of boardElement.children){
         const colId = colElement.id;
-        // console.log(colElement);
         for(const cellElement of colElement.children){
             const rowId = cellElement.id;
-            // console.log(cellElement);
-            // cellElement.innerText = `${colId} ${rowId}`;
             cellElement.innerHTML = "";
             const stoneElement = createStoneElement(board[colId][rowId], puttableArray[colId][rowId]);
             cellElement.appendChild(stoneElement);
@@ -395,38 +320,22 @@ function updateBoard(board, turn){
 
 }
 
-function createStoneElement(colorNum, puttable, tagType){
-    tagType ||= "div";
+function createStoneElement(colorNum, puttable, tagType = "div"){
     const stone = document.createElement(tagType);
-    // stone.className = "stone";
     if(colorNum === 1) stone.className = "stone-black";
     if(colorNum === -1) stone.className = "stone-white";
     if(puttable) stone.className = "stone-puttable";
     stone.style.pointerEvents = "none";
-    // stone.style.margin = "0px 13px";
     stone.style.width = "2em";
     stone.style.height = "2em";
     stone.style.margin = "0.5em 0.5em 0.5em 0.5em";
-    // if(colorNum === 1 || colorNum === -1){
-    //     stone.style.width = "2em";
-    //     stone.style.height = "2em";
-    //     stone.style.margin = "0.5em 0.5em 0.5em 0.5em";
-    // }
-    // if(puttable){
-    //     stone.style.width = "1.5em";
-    //     stone.style.height = "1.5em";
-    //     stone.style.margin = "0.5em 0.5em 0.5em 0.5em";
-    // }
     return stone;
 }
 
 function puttablePlaceArray(board, turn){
-    // console.log(turn);
-    // console.log("call puttablePlaceArray function");
     const colSize = board.length;
     const rowSize = board[0].length;
     const puttablePlaceArr = Array.from({length: colSize}, () => Array(rowSize).fill(false));
-
 
     for(let col = 0; col < colSize; col++){
         for(let row = 0; row < rowSize; row++){
@@ -436,23 +345,15 @@ function puttablePlaceArray(board, turn){
     return puttablePlaceArr;
 }
 
-// const printMessage = {
-//     "put" : board => {},
-//     "reput" : board => {},
-//     "gameset" : board => {},
-//     "pass" : () => {},
-// }
 
 
 
 
 function canPutXY(board, turn, x, y){
     if(board[x][y] !== 0) return false;
-    // console.log("hello");
     for(let dx = -1; dx <= 1; dx++){
         for(let dy = -1; dy <= 1; dy++){
             if(!(dx || dy)) continue;
-            // console.log(dx)
             const directionPuttableCheck = putDirectionMaker(dx, dy, false);
             if(directionPuttableCheck(board, turn, x, y)) return true;
         }
@@ -467,8 +368,6 @@ function distructivePut(board, turn, x, y){
 
             const putDirection = putDirectionMaker(dx, dy, true);
             putDirection(board, turn, x, y);
-            // console.log(turn);
-            // console.log(typeof turn);
         }
     }
 }
@@ -482,7 +381,6 @@ function nonDistructivePut(board, turn, x, y){
 function putDirectionMaker(dx, dy, distructive){
     distructive = distructive || false;
     return function(board, turn, x, y){
-        // console.log(turn);
        let nx = x + dx;
        let ny = y + dy;
        let canPut = false;
@@ -529,17 +427,14 @@ function dataInitialize(data){
 }
 
 function boardDelete(){
-    // const table = document.getElementsByClassName("othello-board")[0];
-    // // console.log(table);
-    // table.remove();
-    const main = document.getElementById("othello-main");
+    const main = document.getElementById("reversi-main");
     main.remove();
     
 }
 
 function reset(){
-    othello.transition("finish");
-    othello.onUserInput(1);
+    reversi.transition("finish");
+    reversi.onUserInput(1);
 }
 
 function AI_NegaMax(board, turn, strength){
@@ -548,14 +443,9 @@ function AI_NegaMax(board, turn, strength){
     function solution(board, turn, strength){
         const puttableArray = puttablePlaceArray(board, turn);
         if(strength <= 0){
-            const r = 1, k = 0.2;
+            const r = 5, k = 0.5;
             let w = 0;
             let a = 0, b = 0, c = 0;
-            // for(const col of board){
-            //     for(const cell of col){
-            //         w += cell * turn;
-            //     }
-            // }
             const colSize = puttableArray.length;
             const rowSize = puttableArray[0].length; 
             for(let i = 0; i < colSize; i++){
@@ -599,18 +489,17 @@ function AI_NegaMax(board, turn, strength){
             }
         }
 
-
         return [maximum, goodX, goodY];
     }
-
-    const [w, x, y] = solution(board, turn, strength);
+    
+    let [w, x, y] = solution(board, turn, strength);
+    if(!isInTheBoard(board, x, y)){
+        return AI_last(board, turn, strength);
+    }
     return [x, y];
 }
 
 function AI_last(board, turn, strength){
-    for(let i = 0; i< 10000; i++){
-        console.log(i);
-    }
     const puttableArray = puttablePlaceArray(board, turn);
     let x = 0;
     let y = 0;
@@ -641,15 +530,9 @@ function boardCount(board){
 }
 
 function updateResult(board, turn){
-    //turn, message, amount, gameset
-    //       <div id = "othello-result turn">turn</div>
-    //   <div id = "othello-result message">message</div>
-    //   <div id = "othello-result stone amount">stone amount</div>
-    //   <div id = "othello-result gameset">gameset</div>
-    //   <button id = "othello-result reset" onclick="reset()">reset</button>
 
-    const turnEl = document.getElementById("othello-result turn");
-    const stoneAmountEl = document.getElementById("othello-result stone amount");
+    const turnEl = document.getElementById("reversi-result turn");
+    const stoneAmountEl = document.getElementById("reversi-result stone amount");
 
     const turnStr = turn === 1 ? "black" : "white";
     turnEl.innerText = `turn: ${turnStr}`;
@@ -668,55 +551,50 @@ function updateResult(board, turn){
 function printResult(){
 
     const resultEl = document.createElement("div");
-    resultEl.id = "othello-result";
+    resultEl.id = "reversi-result";
     resultEl.className = "card d-flex flex-column justify-content-around align-items-center";
     const turnEl = document.createElement("div");
-    turnEl.id = "othello-result turn";
-    // const messageEl = document.createElement("div");
-    // messageEl.id = "othello-result message";
+    turnEl.id = "reversi-result turn";
     const amountEl = document.createElement("div");
-    amountEl.id = "othello-result stone amount";
+    amountEl.id = "reversi-result stone amount";
     const winMessage = document.createElement("div");
-    winMessage.id = "othello-result win";
+    winMessage.id = "reversi-result win";
     const resetEl = document.createElement("button");
-    resetEl.id = "othello-result reset";
+    resetEl.id = "reversi-result reset";
     resetEl.type = "button";
     resetEl.className = "btn btn-secondary w-50"
     resetEl.addEventListener("click", () => reset());
     resetEl.innerHTML = "return to Menu";
-    // const icon = document.createElement("");
-    // icon.className = "bi bi-box-arrow-right";
-    // resetEl.appendChild(icon);
     resultEl.appendChild(turnEl);
-    // resultEl.appendChild(messageEl);
     resultEl.appendChild(amountEl);
     resultEl.appendChild(winMessage);
     resultEl.appendChild(resetEl);
-    const display = document.getElementById("othello-display");
+    const display = document.getElementById("reversi-display");
     display.appendChild(resultEl);
 }
 
 function deleteResult(){
-    document.getElementById("othello-result").remove();
+    document.getElementById("reversi-result").remove();
 }
 
-
-// othello.onUserInput([4,2]);
-// othello.onUserInput([5,4]);
-// othello.onUserInput([4,5]);
-// othello.onUserInput([3,2]);
-// othello.onUserInput([2,3]);
-// othello.onUserInput([5,2]);
-// othello.onUserInput([4,1]);
-// othello.onUserInput([5,3]);
-// othello.onUserInput([6,3]);
+// gameset pattern
+// reversi.onUserInput([4,2]);
+// reversi.onUserInput([5,4]);
+// reversi.onUserInput([4,5]);
+// reversi.onUserInput([3,2]);
+// reversi.onUserInput([2,3]);
+// reversi.onUserInput([5,2]);
+// reversi.onUserInput([4,1]);
+// reversi.onUserInput([5,3]);
+// reversi.onUserInput([6,3]);
 
 
 (function(){
-    console.log(localStorage);
     if(!localStorage.username){
         const username = window.prompt("please type username");
-        localStorage.setItem("username", username);
+        if(username !== null){
+            localStorage.setItem("username", username);
+        }
     }
     if(!localStorage.wins){
         localStorage.setItem("wins", 0);
@@ -727,7 +605,5 @@ function deleteResult(){
 
 })();
 
-(othello.states.title.enter)();
 
-
-
+(reversi.states.title.enter)();
